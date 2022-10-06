@@ -195,18 +195,7 @@ class TimeTreeCalender(TimeTreeRequest):
 
     @classmethod
     def from_response(cls, json: dict) -> TimeTreeCalender:
-        non_complete_calender = cls(
-            id=json["id"],
-            name=json["attributes"]["name"],
-            created_at=datetime.fromisoformat(
-                json["attributes"]["created_at"].replace('Z', '+00:00')),
-            description=json["attributes"]["description"],
-            image_url=json["attributes"]["image_url"] if json["attributes"]["image_url"] else None,
-            color=json["attributes"]["color"],
-            order=json["attributes"]["order"]
-        )
-        # completed!!!
-        return non_complete_calender
+        raise NotImplemented
 
     @classmethod
     def get_list(cls) -> list[TimeTreeCalender]:
@@ -220,18 +209,7 @@ class TimeTreeCalender(TimeTreeRequest):
         res = self.get_request(
             f"/calendars/{self.id}/upcoming_events?timezone={timezone}&days={days}"
         )["data"]
-        return [TimeTreeEvent(
-            _id=j['id'],
-            title=j['attributes']['title'],
-            all_day=j['attributes']['all_day'],
-            start_at=datetime.fromisoformat(j["attributes"]["start_at"].replace('Z', '+00:00')),
-            end_at=datetime.fromisoformat(j["attributes"]["end_at"].replace('Z', '+00:00')),
-            label_id=j['relationships']['label']['data']['id'],
-            attendee_ids=[attendee['id'] for attendee in j['relationships']['attendees']['data']],
-            description=j['attributes']['description'],
-            location=j['attributes']['location'],
-            url=j['attributes'].get_request('url')
-        ) for j in res]
+        raise NotImplemented
 
     def create_event(self, attributes: TimeTreeEventAttributes, relationship: TimeTreeEventRelationships):
         return TimeTreeEventValue(self.id, attributes, relationship).create_event()
