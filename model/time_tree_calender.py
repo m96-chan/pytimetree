@@ -1,9 +1,8 @@
 from __future__ import annotations
 
+import datetime
 import functools
 from dataclasses import dataclass
-import datetime
-from typing import Optional
 
 import pytz
 
@@ -192,14 +191,32 @@ class TimeTreeEvent(TimeTreeEventValue):
 
 
 @dataclass
-class TimeTreeCalender(TimeTreeRequest):
-    id: str
+class TimeTreeCalenderAttributes:
     name: str
     created_at: datetime
     description: str
     image_url: str | None
     color: str
     order: int
+
+    @classmethod
+    def from_dict(cls, dic) -> TimeTreeCalenderAttributes:
+        return TimeTreeCalenderAttributes(
+            dic['name'],
+            datetime.datetime.fromisoformat(dic['created_at'].replace('Z', '+00:00')),
+            dic['description'],
+            dic.get('image_url'),
+            dic['color'],
+            dic['order'],
+        )
+
+
+@dataclass
+class TimeTreeCalender(TimeTreeRequest):
+    id: str
+    attributes: TimeTreeCalenderAttributes
+    _labels: list[TimeTreeLabel] | None = None
+    _members: list[TimeTreeMember] | None = None
 
     def __eq__(self, other):
         if isinstance(other, TimeTreeCalender):
@@ -209,32 +226,30 @@ class TimeTreeCalender(TimeTreeRequest):
     @classmethod
     def from_dict(cls, dic: dict) -> TimeTreeCalender:
         return TimeTreeCalender(
-            dic['id'],
-            dic['name'],
-            datetime.datetime.fromisoformat(dic['created_at'].replace('Z', '+00:00')),
-            dic['description'],
-            dic.get('image_url'),
-            dic['color'],
-            dic['order'],
+            dic['id'], TimeTreeCalenderAttributes.from_dict(dic['attributes'])
         )
 
-    @functools.cached_property
+    @property
     def labels(self) -> list[TimeTreeLabel]:
-        res = self.get_request(f"/calendars/{self.id}/labels")
-        return [TimeTreeLabel.from_dict(l) for l in res['data']]
+        if self._labels is None:
+            res = self.get_request(f"/calendars/{self.id}/labels")
+            self._labels = [TimeTreeLabel.from_dict(l) for l in res['data']]
+        return self._labels
 
-    @functools.cached_property
+    @property
     def members(self) -> list[TimeTreeMember]:
-        res = self.get_request(f"/calendars/{self.id}/members")
-        return [TimeTreeMember.from_dict(m) for m in res['data']]
+        if self._members is None:
+            res = self.get_request(f"/calendars/{self.id}/members")
+            self._members = [TimeTreeMember.from_dict(m) for m in res['data']]
+        return self._members
 
     @classmethod
     def get_list(cls) -> list[TimeTreeCalender]:
-        return [cls.from_dict(j) for j in cls.get_request("/calendars?include=labels,members")["data"]]
+        return [cls.from_dict(j) for j in cls.get_request("/calendars")["data"]]
 
     @classmethod
     def get_by_id(cls, calender_id: str) -> TimeTreeCalender:
-        return cls.from_dict(cls.get_request(f"/calendars/{calender_id}"))
+        return cls.from_dict(cls.get_request(f"/calendars/{calender_id}")["data"])
 
     def get_upcoming_events(self, days: int = 1, timezone: str = "Asia/Tokyo") -> list[TimeTreeEvent]:
         # A range from 1 to 7 can be specified.
