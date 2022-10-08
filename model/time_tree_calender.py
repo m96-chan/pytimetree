@@ -46,6 +46,21 @@ class TimeTreeEventAttributes:
             }
         }
 
+    @classmethod
+    def form_dict(cls, dic: dict) -> TimeTreeEventAttributes:
+        return cls(
+            dic['title'],
+            dic['category'],
+            dic['all_day'],
+            dic['start_at'],
+            dic['end_at'],
+            dic['start_timezone'],
+            dic['end_timezone'],
+            dic.get('description'),
+            dic.get('location'),
+            dic.get('url')
+        )
+
 
 @dataclass
 class TimeTreeLabelAttributes:
@@ -88,7 +103,10 @@ class TimeTreeLabel(TimeTreeRequest):
 
     @classmethod
     def from_dict(cls, dic) -> TimeTreeLabel:
-        return cls(dic['id'], TimeTreeLabelAttributes.from_dict(dic['attributes']))
+        return cls(
+            dic['id'],
+            TimeTreeLabelAttributes.from_dict(dic['attributes']) if dic.get('attributes') else None
+        )
 
 
 @dataclass
@@ -133,7 +151,10 @@ class TimeTreeMember:
 
     @classmethod
     def from_dict(cls, dic: dict) -> TimeTreeMember:
-        return TimeTreeMember(dic['id'], TimeTreeMemberAttributes.from_dict(dic['attributes']))
+        return TimeTreeMember(
+            dic['id'],
+            TimeTreeMemberAttributes.from_dict(dic["attributes"]) if dic.get('attributes') else None
+        )
 
 
 @dataclass
@@ -153,10 +174,17 @@ class TimeTreeEventRelationships:
             }
         }
 
+    @classmethod
+    def from_dict(cls, dic: dict) -> TimeTreeEventRelationships:
+        return cls(
+            TimeTreeLabel.from_dict(dic["label"]["data"]),
+            [TimeTreeMember.from_dict(m) for m in dic["attendees"]["data"]],
+            TimeTreeMember.from_dict(dic["creator"]["data"]) if dic.get("creator") else None
+        )
+
 
 @dataclass
 class TimeTreeEventValue(TimeTreeRequest):
-    calender_id: str
     attributes: TimeTreeEventAttributes
     relationships: TimeTreeEventRelationships
 
@@ -168,9 +196,6 @@ class TimeTreeEventValue(TimeTreeRequest):
                 "relationships": self.relationships.dict
             }
         }
-
-    def create_event(self) -> TimeTreeEvent:
-        return self.post_request(f"/calendars/{self.calender_id}/events", self.dict)
 
 
 @dataclass
@@ -188,6 +213,12 @@ class TimeTreeEvent(TimeTreeEventValue):
 
     def delete_event(self):
         return self.delete_request(f"/calendar/events/{self.id}")
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> TimeTreeEvent:
+        return cls(
+            TimeTreeEventAttributes.form_dict(dic["attributes"]),
+            TimeTreeEventRelationships.from_dict(dic["relationships"]), dic['id'])
 
 
 @dataclass
@@ -249,17 +280,22 @@ class TimeTreeCalender(TimeTreeRequest):
 
     @classmethod
     def get_by_id(cls, calender_id: str) -> TimeTreeCalender:
-        return cls.from_dict(cls.get_request(f"/calendars/{calender_id}")["data"])
+        return cls.from_dict(cls.get_request(f"/calendars/{calender_id}/")["data"])
 
     def get_upcoming_events(self, days: int = 1, timezone: str = "Asia/Tokyo") -> list[TimeTreeEvent]:
         # A range from 1 to 7 can be specified.
         if days not in range(1, 8):
             raise ValueError(f"days {days}: A range from 1 to 7 can be specified.")
-
         res = self.get_request(
             f"/calendars/{self.id}/upcoming_events?timezone={timezone}&days={days}"
         )["data"]
-        raise NotImplemented
+        return [TimeTreeEvent.from_dict(e) for e in res]
 
-    def create_event(self, attributes: TimeTreeEventAttributes, relationship: TimeTreeEventRelationships):
-        return TimeTreeEventValue(self.id, attributes, relationship).create_event()
+    def create_event(self, ev: TimeTreeEventValue) -> TimeTreeEvent:
+        return TimeTreeEvent.from_dict(self.post_request(f"/calendars/{self.id}/events", ev.dict))
+
+    def update_event(self, ev: TimeTreeEvent) -> TimeTreeEvent:
+        return TimeTreeEvent.from_dict(self.put_request(f"/calendars/{self.id}/events/{ev.id}", ev.dict))
+
+    def delete_event(self, ev: TimeTreeEvent) -> None:
+        self.delete_request(f"/calendars/{self.id}/events/{ev.id}")
