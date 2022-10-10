@@ -1,9 +1,8 @@
-import datetime
 import os
 
 import pytest
 
-from model.time_tree_calender import *
+from pytimetree.time_tree_calender import *
 
 TEST_TOKEN = os.getenv("TEST_TOKEN")
 TEST_CALENDER_ID = os.getenv("TEST_CALENDER_ID")

@@ -9,6 +9,8 @@ pytz = "*"
 
 [dev-packages]
 pytest = "*"
+wheel = "*"
+twine = "*"
 
 [requires]
 python_version = "3.10"

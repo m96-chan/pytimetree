@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import datetime
-import functools
 from dataclasses import dataclass
 
 import pytz
 
-from model.time_tree_request import TimeTreeRequest
+from pytimetree.time_tree_request import TimeTreeRequest
 
 
 @dataclass

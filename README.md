@@ -1,1 +1,2 @@
-# Documentation for PyTimeTreef
+# Documentation for PyTimeTree
+
