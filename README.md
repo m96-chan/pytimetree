@@ -1,2 +1,2 @@
-# pytimetree
-python timetree accessor libs
+# Documentation for PyTimeTree
+
