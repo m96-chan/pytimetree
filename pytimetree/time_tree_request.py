@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import functools
 
 import requests
@@ -22,10 +24,12 @@ def triable_request(f):
 
 class TimeTreeRequest:
     BASE_URI = "https://timetreeapis.com"
-    TOKEN = ""
+    TOKEN: str | None = None
 
     @classmethod
     def no_body_request(cls, method, endpoint, **kwargs):
+        if not cls.TOKEN:
+            raise ValueError("You must set TOKEN.")
         url = f"{cls.BASE_URI}{endpoint}"
         arg_dict = {**kwargs, **{
             "headers": {
@@ -47,6 +51,8 @@ class TimeTreeRequest:
 
     @classmethod
     def body_request(cls, method: str, endpoint: str, body: dict, **kwargs):
+        if not cls.TOKEN:
+            raise ValueError("You must set TOKEN.")
         url = f"{cls.BASE_URI}{endpoint}"
         arg_dict = {**kwargs, **{
             "headers": {

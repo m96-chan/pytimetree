@@ -31,9 +31,8 @@ assert author
 assert author_email
 assert url
 
-long_description = """
-python TimeTree informal SDK
-"""
+with open(path.join(root_dir, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name=package_name,
@@ -47,6 +46,7 @@ setup(
     url=url,
     description='Python TimeTree informal SDK',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     keywords='timetree, pytimetree,',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',

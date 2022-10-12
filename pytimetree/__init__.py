@@ -1,7 +1,7 @@
 from .time_tree_calender import *
 
 __copyright__ = "Copyright (C) 2022 Yusuke Harada"
-__version__ = "0.1.1"
+__version__ = "0.1.3"
 __license__ = "MIT Licentse"
 __author__ = "Yusuke Harada"
 __author_email__ = "y_harada@technologies.moe"
