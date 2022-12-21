@@ -1,6 +1,6 @@
 # Project description<PyTimeTree>
 
-### Author: Yusuke Harada<[y_harada@technologies.moe](mailto:y_harada@technologies.moe])>
+### Author: Yusuke Harada<[y_harada@technologies.moe](mailto:y_harada@devenus.com])>
 
 ## Introduction
 
